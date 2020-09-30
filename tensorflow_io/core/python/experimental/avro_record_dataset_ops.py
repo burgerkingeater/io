@@ -52,21 +52,18 @@ def _create_or_validate_filenames_dataset(filenames):
 
 # copied from https://github.com/tensorflow/tensorflow/blob/
 # 3095681b8649d9a828afb0a14538ace7a998504d/tensorflow/python/data/ops/readers.py#L67
-def _create_dataset_reader(dataset_creator, filenames, num_parallel_reads=None):
+def _create_dataset_reader(dataset_creator, filenames, cycle_length=None, num_parallel_calls=None):
     """create_dataset_reader"""
 
     def read_one_file(filename):
         filename = tf.convert_to_tensor(filename, tf.string, name="filename")
         return dataset_creator(filename)
 
-    if num_parallel_reads is None:
+    if cycle_length is None:
         return filenames.flat_map(read_one_file)
-    if num_parallel_reads == tf.data.experimental.AUTOTUNE:
-        return filenames.interleave(
-            read_one_file, num_parallel_calls=num_parallel_reads
-        )
+
     return filenames.interleave(
-        read_one_file, cycle_length=num_parallel_reads, block_length=1
+        read_one_file, cycle_length=cycle_length, num_parallel_calls=num_parallel_calls, block_length=1
     )
 
 
@@ -128,7 +125,7 @@ class AvroRecordDataset(tf.data.Dataset):
     """A `Dataset` comprising records from one or more AvroRecord files."""
 
     def __init__(
-        self, filenames, buffer_size=None, num_parallel_reads=None, reader_schema=None
+        self, filenames, buffer_size=None, num_parallel_reads=None, num_parallel_calls=None, reader_schema=None
     ):
         """Creates a `AvroRecordDataset` to read one or more AvroRecord files.
 
@@ -145,6 +142,7 @@ class AvroRecordDataset(tf.data.Dataset):
             input pipeline is I/O bottlenecked, consider setting this parameter to a
             value greater than one to parallelize the I/O. If `None`, files will be
             read sequentially.
+          num_parallel_calls: (Optional.)  number of thread to spawn.
           reader_schema: (Optional.) A `tf.string` scalar representing the reader
             schema or None.
 
@@ -157,12 +155,17 @@ class AvroRecordDataset(tf.data.Dataset):
         self._filenames = filenames
         self._buffer_size = buffer_size
         self._num_parallel_reads = num_parallel_reads
+        self._num_parallel_calls = num_parallel_calls
         self._reader_schema = reader_schema
 
         def creator_fn(filename):
             return _AvroRecordDataset(filename, buffer_size, reader_schema)
 
-        self._impl = _create_dataset_reader(creator_fn, filenames, num_parallel_reads)
+        self._impl = _create_dataset_reader(
+            creator_fn,
+            filenames,
+            cycle_length=num_parallel_reads,
+            num_parallel_calls=num_parallel_calls)
         variant_tensor = self._impl._variant_tensor  # pylint: disable=protected-access
         super().__init__(variant_tensor)
 
@@ -171,12 +174,14 @@ class AvroRecordDataset(tf.data.Dataset):
         filenames=None,
         buffer_size=None,
         num_parallel_reads=None,
+        num_parallel_calls=None,
         reader_schema=None,
     ):
         return AvroRecordDataset(
             filenames or self._filenames,
             buffer_size or self._buffer_size,
             num_parallel_reads or self._num_parallel_reads,
+            num_parallel_calls or self._num_parallel_calls,
             reader_schema or self._reader_schema,
         )
 
