@@ -99,14 +99,21 @@ class AvroRecordDatasetOp::Dataset : public DatasetBase {
     Status GetNextInternal(IteratorContext* ctx,
                            std::vector<Tensor>* out_tensors,
                            bool* end_of_sequence) override {
+      using clock = std::chrono::system_clock;
+      using ms = std::chrono::duration<double, std::milli>;
+
       mutex_lock l(mu_);
       do {
         // We are currently processing a file, so try to read the next record.
         if (reader_) {
           out_tensors->emplace_back(ctx->allocator({}), DT_STRING,
                                     TensorShape({}));
+          const auto before_read_record = clock::now();
           Status s =
               reader_->ReadRecord(&out_tensors->back().scalar<tstring>()());
+          const auto after_read_record = clock::now();
+          const ms read_duration = after_read_record - before_read_record;
+          VLOG(0) << "READ_TIMING: Time spend reading a record: " << read_duration.count() << " ms ";
           if (s.ok()) {
             *end_of_sequence = false;
             return Status::OK();
