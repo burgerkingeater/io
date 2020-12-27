@@ -259,7 +259,7 @@ Status ParseAvro(const AvroParserConfig& config,
   ParallelFor(ProcessMiniBatch, num_minibatches, thread_pool);
   const auto after_parse = clock::now();
   const ms parse_read_duration = after_parse - before_parse;
-  VLOG(5) << "PARSER_TIMING: Time spend reading and parsing "
+  VLOG(0) << "PARSER_TIMING: Time spend reading and parsing "
           << parse_read_duration.count() << " ms ";
   for (Status& status : status_of_minibatch) {
     TF_RETURN_IF_ERROR(status);
@@ -387,10 +387,10 @@ Status ParseAvro(const AvroParserConfig& config,
   }
   const auto after_dense_merge = clock::now();
   const ms d_merge_duration = after_dense_merge - after_sparse_merge;
-  VLOG(5) << "PARSER_TIMING: Sparse merge duration"
+  VLOG(0) << "PARSER_TIMING: Sparse merge duration"
           << s_merge_duration.count() << " ms ";
 
-  VLOG(5) << "PARSER_TIMING: Dense merge duration"
+  VLOG(0) << "PARSER_TIMING: Dense merge duration"
           << d_merge_duration.count() << " ms ";
   return Status::OK();
 }

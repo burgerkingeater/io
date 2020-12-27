@@ -108,9 +108,9 @@ Status AvroParserTree::ParseValues(
     read_duration += after_read - before_read;
   }
 
-  VLOG(5) << "PARSER_TIMING: Avro Read times "
+  VLOG(0) << "PARSER_TIMING: Avro Read times "
           << read_duration.count() << " ms ";
-  VLOG(5) << "PARSER_TIMING: Avro Parse times "
+  VLOG(0) << "PARSER_TIMING: Avro Parse times "
           << parse_duration.count() << " ms ";
   // add end marks to all buffers for batch
   TF_RETURN_IF_ERROR(AddFinishMarks(key_to_value));
