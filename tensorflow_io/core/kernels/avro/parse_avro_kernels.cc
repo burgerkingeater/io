@@ -221,7 +221,7 @@ Status ParseAvro(const AvroParserConfig& config,
     return (serialized.size() * minibatch) / num_minibatches;
   };
 
-  VLOG(5) << "Computed " << num_minibatches << " minibatches";
+  VLOG(0) << "Computed " << num_minibatches << " minibatches";
 
   // TODO(lew): A big performance low-hanging fruit here is to improve
   //   num_minibatches calculation to take into account actual amount of work
@@ -251,7 +251,7 @@ Status ParseAvro(const AvroParserConfig& config,
     auto read_value = [&](avro::GenericDatum& d) {
       return range_reader.read(d);
     };
-    VLOG(5) << "Processing minibatch " << minibatch;
+    VLOG(0) << "Processing minibatch " << minibatch;
     status_of_minibatch[minibatch] =
         parser_tree.ParseValues(&buffers[minibatch], read_value, reader_schema, defaults);
   };
@@ -259,7 +259,7 @@ Status ParseAvro(const AvroParserConfig& config,
   ParallelFor(ProcessMiniBatch, num_minibatches, thread_pool);
   const auto after_parse = clock::now();
   const ms parse_read_duration = after_parse - before_parse;
-  VLOG(0) << "PARSER_TIMING: Time spend reading and parsing "
+  VLOG(0) << "PARSER_TIMING: Time spend reading and parsing: "
           << parse_read_duration.count() << " ms ";
   for (Status& status : status_of_minibatch) {
     TF_RETURN_IF_ERROR(status);
@@ -387,10 +387,10 @@ Status ParseAvro(const AvroParserConfig& config,
   }
   const auto after_dense_merge = clock::now();
   const ms d_merge_duration = after_dense_merge - after_sparse_merge;
-  VLOG(0) << "PARSER_TIMING: Sparse merge duration"
+  VLOG(0) << "PARSER_TIMING: Sparse merge duration: "
           << s_merge_duration.count() << " ms ";
 
-  VLOG(0) << "PARSER_TIMING: Dense merge duration"
+  VLOG(0) << "PARSER_TIMING: Dense merge duration: "
           << d_merge_duration.count() << " ms ";
   return Status::OK();
 }
