@@ -117,6 +117,12 @@ Results in the following output:
     if cycle_length is None:
         return filenames.flat_map(read_many_files)
 
+    print("cycle_length")
+    print(cycle_length)
+    print("num_parallel_calls")
+    print(num_parallel_calls)
+    print("block_length")
+    print(block_length)
     return filenames.interleave(
         read_many_files, cycle_length=cycle_length, num_parallel_calls=num_parallel_calls, block_length=block_length,
         deterministic=deterministic
