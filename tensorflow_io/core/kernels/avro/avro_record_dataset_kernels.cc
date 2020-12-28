@@ -108,12 +108,14 @@ class AvroRecordDatasetOp::Dataset : public DatasetBase {
         if (reader_) {
           out_tensors->emplace_back(ctx->allocator({}), DT_STRING,
                                     TensorShape({}));
+          VLOG(0) << "READ_TIMING: start " ;
           const auto before_read_record = clock::now();
           Status s =
               reader_->ReadRecord(&out_tensors->back().scalar<tstring>()());
           const auto after_read_record = clock::now();
           const ms read_duration = after_read_record - before_read_record;
           VLOG(0) << "READ_TIMING: Time spend reading a record: " << read_duration.count() << " ms ";
+          VLOG(0) << "READ_TIMING: end " ;
           if (s.ok()) {
             *end_of_sequence = false;
             return Status::OK();
