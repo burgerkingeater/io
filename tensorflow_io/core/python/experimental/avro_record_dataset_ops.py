@@ -124,7 +124,8 @@ Results in the following output:
     print("block_length")
     print(block_length)
     return filenames.interleave(
-        read_many_files, cycle_length=cycle_length, num_parallel_calls=num_parallel_calls, block_length=block_length,
+        lambda filename: read_many_files(filename), cycle_length=cycle_length,
+        num_parallel_calls=num_parallel_calls, block_length=block_length,
         deterministic=deterministic
     )
 
